@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Laporan Admin — Villa Nusantara</title>
+<title>Laporan Admin — Family Inn</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -191,7 +191,7 @@
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
-  <div class="sidebar-logo">Villa <span>Nusantara</span><small>Panel Admin</small></div>
+  <div class="sidebar-logo">Family <span>Inn</span><small>Panel Admin</small></div>
   <nav class="sidebar-menu">
     <div class="menu-item active" onclick="showPage('reservasi')">
       <span class="menu-icon">📋</span> Reservasi
@@ -419,7 +419,7 @@
     `;
     const waNo = r.wa.replace(/\D/g,'');
     const waNum = waNo.startsWith('0') ? '62' + waNo.slice(1) : waNo;
-    const pesan = `Halo ${r.nama}, reservasi *${r.kamar}* Anda di Villa Nusantara (${formatDate(r.checkin)} – ${formatDate(r.checkout)}) sudah kami catat. Terima kasih! 🏨`;
+    const pesan = `Halo ${r.nama}, reservasi *${r.kamar}* Anda di Family Inn (${formatDate(r.checkin)} – ${formatDate(r.checkout)}) sudah kami catat. Terima kasih! 🏨`;
     document.getElementById('detailWaBtn').onclick = () => window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(pesan)}`, '_blank');
     document.getElementById('detailModal').classList.add('active');
   }
@@ -664,7 +664,7 @@
     `;
     const waNo = r.wa.replace(/\D/g,'');
     const waNum = waNo.startsWith('0') ? '62' + waNo.slice(1) : waNo;
-    const pesan = `Halo ${r.nama}, reservasi *${r.kamar}* Anda di Villa Nusantara (${formatDate(r.checkin)} – ${formatDate(r.checkout)}) sudah kami catat. Terima kasih! 🏨`;
+    const pesan = `Halo ${r.nama}, reservasi *${r.kamar}* Anda di Family Inn (${formatDate(r.checkin)} – ${formatDate(r.checkout)}) sudah kami catat. Terima kasih! 🏨`;
     document.getElementById('detailWaBtn').onclick = () => window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(pesan)}`, '_blank');
     document.getElementById('detailModal').classList.add('active');
   }
