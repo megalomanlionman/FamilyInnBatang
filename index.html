@@ -714,8 +714,8 @@
   // ══════════════════════════════════════════════
   //  KONFIGURASI SUPABASE — isi 2 baris ini saja!
   // ══════════════════════════════════════════════
-  const SB_URL = https://djfqagiougboawwpdwyw.supabase.co ;   // ganti dgn Project URL
-  const SB_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZnFhZ2lvdWdib2F3d3Bkd3l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNTg5NzQsImV4cCI6MjA5MjgzNDk3NH0.L7RzMWnp51BSDR5dNcDb4cQCdsSgKApCHOJgwvOF5J8;  // ganti dgn anon/public key
+  const SB_URL = 'https://XXXXXXXXXXXXXX.supabase.co';   // ganti dgn Project URL
+  const SB_KEY = 'eyJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';  // ganti dgn anon/public key
   // ══════════════════════════════════════════════
 
   const SB_HEADERS = {
@@ -842,7 +842,7 @@ Mohon konfirmasi ketersediaan kamar. Terima kasih! 🙏`;
 
   // ── Simpan reservasi (via Supabase, lihat fungsi async di atas) ──
 
-  function konfirmasiPesan() {
+  async function konfirmasiPesan() {
     const nama  = document.getElementById('mNama').value.trim();
     const wa    = document.getElementById('mWa').value.trim();
     const ci    = document.getElementById('mCheckin').value;
@@ -855,19 +855,21 @@ Mohon konfirmasi ketersediaan kamar. Terima kasih! 🙏`;
     if (malam <= 0) { alert('Tanggal check-out harus setelah check-in.'); return; }
 
     const total = malam * currentPrice;
-
-    // Simpan ke localStorage
-    simpanReservasi({ nama, wa, kamar, checkin:ci, checkout:co, malam, total, catatan:'' });
-
     const pesan = buatPesanWA({ nama, wa, kamar, checkin:ci, checkout:co, malam, total, pesan:'' });
     const url   = `https://wa.me/${WA_PEMILIK}?text=${encodeURIComponent(pesan)}`;
 
+    // Buka WA langsung (harus dalam user gesture, sebelum async)
+    window.open(url, '_blank');
+
+    // Tampilkan sukses
     document.getElementById('modalForm').style.display = 'none';
     document.getElementById('successMsg').style.display = 'block';
-    setTimeout(() => window.open(url, '_blank'), 800);
+
+    // Simpan ke database (background)
+    await simpanReservasi({ nama, wa, kamar, checkin:ci, checkout:co, malam, total, catatan:'' });
   }
 
-  function kirimReservasi() {
+  async function kirimReservasi() {
     const nama    = document.querySelector('#kontak input[type=text]').value.trim();
     const wa      = document.querySelector('#kontak input[type=tel]').value.trim();
     const kamar   = document.querySelector('#kontak select').value;
@@ -879,19 +881,19 @@ Mohon konfirmasi ketersediaan kamar. Terima kasih! 🙏`;
       alert('Mohon lengkapi semua field reservasi.'); return;
     }
 
-    const hargaMap = { 'Kamar Transit Premium': 100000, 'Transit Premium (4 Jam) — Rp 100.000': 100000 };
+    const hargaMap = { 'Kamar Standar':150000, 'Kamar Deluxe':250000, 'Kamar Suite':400000 };
     const malam = Math.round((new Date(co) - new Date(ci)) / 86400000);
     if (malam <= 0) { alert('Tanggal check-out harus setelah check-in.'); return; }
 
     const total = malam * (hargaMap[kamar] || 0);
-
-    // Simpan ke localStorage
-    simpanReservasi({ nama, wa, kamar, checkin:ci, checkout:co, malam, total, catatan });
-
     const pesan = buatPesanWA({ nama, wa, kamar, checkin:ci, checkout:co, malam, total, pesan:catatan });
     const url   = `https://wa.me/${WA_PEMILIK}?text=${encodeURIComponent(pesan)}`;
+
+    // Buka WA langsung (harus dalam user gesture, sebelum async)
     window.open(url, '_blank');
-    alert('✅ Reservasi tersimpan & WhatsApp dibuka!');
+
+    // Simpan ke database (background)
+    await simpanReservasi({ nama, wa, kamar, checkin:ci, checkout:co, malam, total, catatan });
   }
 
   function cariKamar() {
