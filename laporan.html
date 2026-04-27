@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laporan Admin — Villa Nusantara</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5EFE0; --warm: #E8D9B5; --brown: #8B6347;
+    --dark: #2C1E10; --gold: #C9973A; --green: #4A6741;
+    --white: #FDFAF4; --red: #C0392B; --blue: #2980B9;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:#f0ebe0; color:var(--dark); min-height:100vh; }
+
+  /* ── SIDEBAR ── */
+  .layout { display:flex; min-height:100vh; }
+  .sidebar {
+    width: 240px; background:var(--dark); padding:28px 0;
+    display:flex; flex-direction:column; position:fixed; height:100vh;
+    z-index:50;
+  }
+  .sidebar-logo {
+    font-family:'Playfair Display',serif; font-size:1.2rem;
+    color:#fff; padding:0 24px 28px; border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .sidebar-logo span { color:var(--gold); }
+  .sidebar-logo small { display:block; font-family:'DM Sans',sans-serif; font-size:.72rem; color:rgba(255,255,255,.4); margin-top:2px; }
+  .sidebar-menu { padding:20px 0; flex:1; }
+  .menu-item {
+    display:flex; align-items:center; gap:12px; padding:13px 24px;
+    color:rgba(255,255,255,.55); font-size:.88rem; cursor:pointer;
+    transition:all .2s; text-decoration:none;
+  }
+  .menu-item:hover { color:#fff; background:rgba(255,255,255,.05); }
+  .menu-item.active { color:#fff; background:rgba(201,151,58,.15); border-right:3px solid var(--gold); }
+  .menu-icon { font-size:1.1rem; width:22px; text-align:center; }
+  .sidebar-footer { padding:20px 24px; border-top:1px solid rgba(255,255,255,.08); }
+  .sidebar-footer a {
+    display:block; text-align:center; padding:10px; border-radius:8px;
+    background:rgba(255,255,255,.06); color:rgba(255,255,255,.6);
+    text-decoration:none; font-size:.83rem; transition:background .2s;
+  }
+  .sidebar-footer a:hover { background:rgba(255,255,255,.12); color:#fff; }
+
+  /* ── MAIN ── */
+  .main { margin-left:240px; padding:32px; flex:1; }
+
+  /* ── HEADER ── */
+  .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:14px; }
+  .page-title { font-family:'Playfair Display',serif; font-size:1.8rem; }
+  .page-sub { color:var(--brown); font-size:.88rem; margin-top:4px; }
+  .header-actions { display:flex; gap:10px; }
+  .btn { padding:10px 20px; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:500; cursor:pointer; border:none; transition:all .2s; }
+  .btn-ghost { background:transparent; border:1.5px solid rgba(139,99,71,.3); color:var(--brown); }
+  .btn-ghost:hover { border-color:var(--brown); color:var(--dark); }
+  .btn-danger { background:#fff0ee; color:var(--red); border:1.5px solid #f5c6c0; }
+  .btn-danger:hover { background:#fde0dc; }
+  .btn-export { background:var(--green); color:#fff; }
+  .btn-export:hover { background:#3a5432; }
+
+  /* ── STAT CARDS ── */
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:28px; }
+  .stat-card {
+    background:var(--white); border-radius:14px; padding:22px;
+    border:1px solid rgba(139,99,71,.1);
+    transition:transform .2s, box-shadow .2s;
+  }
+  .stat-card:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(44,30,16,.08); }
+  .stat-icon { font-size:1.6rem; margin-bottom:10px; }
+  .stat-val { font-family:'Playfair Display',serif; font-size:1.8rem; color:var(--dark); }
+  .stat-lbl { font-size:.78rem; color:var(--brown); text-transform:uppercase; letter-spacing:.06em; margin-top:3px; }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    background:var(--white); border-radius:12px; padding:16px 20px;
+    display:flex; gap:14px; align-items:center; margin-bottom:20px; flex-wrap:wrap;
+    border:1px solid rgba(139,99,71,.1);
+  }
+  .filter-bar input, .filter-bar select {
+    padding:9px 14px; border-radius:8px; border:1.5px solid rgba(139,99,71,.2);
+    font-family:'DM Sans',sans-serif; font-size:.85rem; color:var(--dark);
+    background:var(--cream); outline:none; transition:border-color .2s;
+  }
+  .filter-bar input:focus, .filter-bar select:focus { border-color:var(--green); }
+  .filter-bar input { flex:1; min-width:180px; }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    background:var(--white); border-radius:16px; overflow:hidden;
+    border:1px solid rgba(139,99,71,.1);
+    box-shadow:0 2px 20px rgba(44,30,16,.05);
+  }
+  .table-head-bar {
+    padding:18px 22px; display:flex; justify-content:space-between; align-items:center;
+    border-bottom:1px solid rgba(139,99,71,.1); flex-wrap:wrap; gap:10px;
+  }
+  .table-head-bar h3 { font-size:1rem; font-weight:600; }
+  .count-badge {
+    background:rgba(74,103,65,.1); color:var(--green);
+    padding:4px 12px; border-radius:20px; font-size:.78rem; font-weight:600;
+  }
+  table { width:100%; border-collapse:collapse; }
+  thead tr { background:rgba(245,239,224,.6); }
+  th { padding:13px 18px; text-align:left; font-size:.75rem; font-weight:600; color:var(--brown); text-transform:uppercase; letter-spacing:.07em; white-space:nowrap; }
+  td { padding:14px 18px; font-size:.88rem; border-bottom:1px solid rgba(139,99,71,.07); vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tbody tr { transition:background .15s; }
+  tbody tr:hover { background:rgba(245,239,224,.5); }
+
+  .status-badge {
+    display:inline-block; padding:4px 12px; border-radius:20px;
+    font-size:.75rem; font-weight:600; cursor:pointer;
+    transition:opacity .2s;
+  }
+  .status-badge:hover { opacity:.8; }
+  .s-menunggu  { background:#fff8e1; color:#b7860a; }
+  .s-konfirmasi { background:#e8f5e9; color:#2e7d32; }
+  .s-checkin   { background:#e3f2fd; color:#1565c0; }
+  .s-checkout  { background:#f3e5f5; color:#6a1b9a; }
+  .s-batal     { background:#ffebee; color:#c62828; }
+
+  .wa-link {
+    display:inline-flex; align-items:center; gap:5px;
+    color:var(--green); text-decoration:none; font-weight:500;
+    font-size:.82rem; background:rgba(74,103,65,.08);
+    padding:4px 10px; border-radius:20px; transition:background .2s;
+  }
+  .wa-link:hover { background:rgba(74,103,65,.15); }
+
+  .btn-del {
+    background:none; border:none; cursor:pointer; color:#c0392b;
+    font-size:1rem; padding:4px 8px; border-radius:6px; transition:background .2s;
+  }
+  .btn-del:hover { background:#ffebee; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align:center; padding:64px 20px; color:var(--brown);
+  }
+  .empty-state .big-icon { font-size:3.5rem; margin-bottom:16px; }
+  .empty-state h3 { font-family:'Playfair Display',serif; font-size:1.3rem; color:var(--dark); margin-bottom:8px; }
+  .empty-state p { font-size:.88rem; }
+
+  /* ── TOAST ── */
+  .toast {
+    position:fixed; bottom:28px; right:28px; z-index:999;
+    background:var(--dark); color:#fff; padding:14px 22px; border-radius:12px;
+    font-size:.88rem; box-shadow:0 8px 30px rgba(0,0,0,.2);
+    transform:translateY(60px); opacity:0; transition:all .3s;
+    pointer-events:none;
+  }
+  .toast.show { transform:translateY(0); opacity:1; }
+
+  /* ── MODAL DETAIL ── */
+  .modal-overlay {
+    display:none; position:fixed; inset:0; z-index:200;
+    background:rgba(44,30,16,.6); backdrop-filter:blur(4px);
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.active { display:flex; }
+  .modal {
+    background:var(--white); border-radius:20px; padding:32px;
+    max-width:480px; width:100%; animation:scaleIn .25s ease;
+  }
+  .modal h3 { font-family:'Playfair Display',serif; font-size:1.4rem; margin-bottom:20px; }
+  .detail-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(139,99,71,.1); font-size:.9rem; }
+  .detail-row:last-of-type { border:none; }
+  .detail-row .lbl { color:var(--brown); }
+  .detail-row .val { font-weight:500; text-align:right; }
+  .modal-actions { display:flex; gap:10px; margin-top:22px; }
+  .modal-actions .btn { flex:1; text-align:center; }
+
+  @keyframes scaleIn { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
+
+  @media(max-width:768px){
+    .sidebar { width:200px; }
+    .main { margin-left:200px; padding:20px 16px; }
+    th:nth-child(4), td:nth-child(4),
+    th:nth-child(6), td:nth-child(6) { display:none; }
+  }
+  @media(max-width:560px){
+    .sidebar { display:none; }
+    .main { margin-left:0; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">Villa <span>Nusantara</span><small>Panel Admin</small></div>
+  <nav class="sidebar-menu">
+    <div class="menu-item active" onclick="showPage('reservasi')">
+      <span class="menu-icon">📋</span> Reservasi
+    </div>
+    <div class="menu-item" onclick="showPage('statistik')">
+      <span class="menu-icon">📊</span> Statistik
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="penginapan.html">← Kembali ke Website</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- PAGE: RESERVASI -->
+  <div id="pageReservasi">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Data Reservasi</h1>
+        <p class="page-sub" id="subDate"></p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost" onclick="refreshData()">🔄 Refresh</button>
+        <button class="btn btn-export" onclick="exportCSV()">⬇️ Export CSV</button>
+        <button class="btn btn-danger" onclick="hapusSemua()">🗑 Hapus Semua</button>
+      </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stats-grid" id="statCards"></div>
+
+    <!-- FILTER -->
+    <div class="filter-bar">
+      <input type="text" id="searchInput" placeholder="🔍  Cari nama atau nomor WA..." oninput="render()">
+      <select id="filterKamar" onchange="render()">
+        <option value="">Semua Kamar</option>
+        <option>Kamar Standar</option>
+        <option>Kamar Deluxe</option>
+        <option>Kamar Suite</option>
+      </select>
+      <select id="filterStatus" onchange="render()">
+        <option value="">Semua Status</option>
+        <option>Menunggu</option>
+        <option>Konfirmasi</option>
+        <option>Check-in</option>
+        <option>Check-out</option>
+        <option>Batal</option>
+      </select>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <div class="table-head-bar">
+        <h3>Daftar Reservasi</h3>
+        <span class="count-badge" id="countBadge">0 data</span>
+      </div>
+      <div id="tableArea"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: STATISTIK -->
+  <div id="pageStatistik" style="display:none">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Statistik</h1>
+        <p class="page-sub">Ringkasan performa penginapan</p>
+      </div>
+    </div>
+    <div id="statsContent"></div>
+  </div>
+
+</main>
+</div>
+
+<!-- MODAL DETAIL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <h3>Detail Reservasi</h3>
+    <div id="detailContent"></div>
+    <div class="modal-actions">
+      <button class="btn btn-export" id="detailWaBtn">💬 WA Tamu</button>
+      <button class="btn btn-ghost" onclick="closeDetail()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div id="loadingOverlay" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(44,30,16,.4);backdrop-filter:blur(3px);align-items:center;justify-content:center;flex-direction:column;gap:12px">
+  <div style="width:44px;height:44px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></div>
+  <span style="color:#fff;font-size:.9rem">Memuat data...</span>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ══════════════════════════════════════════════
+  //  KONFIGURASI SUPABASE — sama dengan penginapan.html
+  // ══════════════════════════════════════════════
+  const SB_URL = 'https://XXXXXXXXXXXXXX.supabase.co';
+  const SB_KEY = 'eyJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+  // ══════════════════════════════════════════════
+
+  const SB_HEADERS = {
+    'apikey': SB_KEY,
+    'Authorization': 'Bearer ' + SB_KEY,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+  };
+
+  // ── CRUD Supabase ──
+  async function fetchAll() {
+    const res = await fetch(`${SB_URL}/rest/v1/reservasi?select=*&order=id.desc`, { headers: SB_HEADERS });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  }
+
+  async function updateStatus(id, status) {
+    const res = await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: SB_HEADERS,
+      body: JSON.stringify({ status })
+    });
+    if (!res.ok) throw new Error(await res.text());
+  }
+
+  async function deleteRow(id) {
+    const res = await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: SB_HEADERS
+    });
+    if (!res.ok) throw new Error(await res.text());
+  }
+
+  async function deleteAll() {
+    const res = await fetch(`${SB_URL}/rest/v1/reservasi?id=gt.0`, {
+      method: 'DELETE',
+      headers: SB_HEADERS
+    });
+    if (!res.ok) throw new Error(await res.text());
+  }
+
+  // ── Cache lokal ──
+  let allData = [];
+
+  function formatRp(n) { return 'Rp ' + Number(n).toLocaleString('id-ID'); }
+  function formatDate(str) {
+    if (!str) return '-';
+    return new Date(str).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+  }
+  function formatDateTime(str) {
+    if (!str) return '-';
+    return new Date(str).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+
+  function showToast(msg, ok=true) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = ok ? 'var(--dark)' : '#c0392b';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  function showLoading(show) {
+    document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+  }
+
+  const statusOrder = ['Menunggu','Konfirmasi','Check-in','Check-out','Batal'];
+  const statusClass  = { 'Menunggu':'s-menunggu','Konfirmasi':'s-konfirmasi','Check-in':'s-checkin','Check-out':'s-checkout','Batal':'s-batal' };
+
+  // ── UBAH STATUS ──
+  async function ubahStatus(id) {
+    const row = allData.find(r => r.id === id);
+    if (!row) return;
+    const next = statusOrder[(statusOrder.indexOf(row.status) + 1) % statusOrder.length];
+    showLoading(true);
+    try {
+      await updateStatus(id, next);
+      showToast('Status → ' + next);
+      await loadData();
+    } catch(e) { showToast('Gagal update: ' + e.message, false); showLoading(false); }
+  }
+
+  // ── HAPUS SATU ──
+  async function hapus(id) {
+    if (!confirm('Hapus data ini?')) return;
+    showLoading(true);
+    try {
+      await deleteRow(id);
+      showToast('Data dihapus.');
+      await loadData();
+    } catch(e) { showToast('Gagal hapus: ' + e.message, false); showLoading(false); }
+  }
+
+  // ── HAPUS SEMUA ──
+  async function hapusSemua() {
+    if (!confirm('Hapus SEMUA data? Tidak bisa dibatalkan!')) return;
+    showLoading(true);
+    try {
+      await deleteAll();
+      showToast('Semua data dihapus.');
+      await loadData();
+    } catch(e) { showToast('Gagal: ' + e.message, false); showLoading(false); }
+  }
+
+  // ── DETAIL MODAL ──
+  function lihatDetail(id) {
+    const r = allData.find(x => x.id === id);
+    if (!r) return;
+    document.getElementById('detailContent').innerHTML = `
+      <div class="detail-row"><span class="lbl">ID</span><span class="val">#${r.id}</span></div>
+      <div class="detail-row"><span class="lbl">Nama</span><span class="val">${r.nama}</span></div>
+      <div class="detail-row"><span class="lbl">WhatsApp</span><span class="val">${r.wa}</span></div>
+      <div class="detail-row"><span class="lbl">Tipe Kamar</span><span class="val">${r.kamar}</span></div>
+      <div class="detail-row"><span class="lbl">Check-in</span><span class="val">${formatDate(r.checkin)}</span></div>
+      <div class="detail-row"><span class="lbl">Check-out</span><span class="val">${formatDate(r.checkout)}</span></div>
+      <div class="detail-row"><span class="lbl">Jumlah Malam</span><span class="val">${r.malam} malam</span></div>
+      <div class="detail-row"><span class="lbl">Total</span><span class="val" style="color:var(--green);font-weight:700">${formatRp(r.total)}</span></div>
+      <div class="detail-row"><span class="lbl">Status</span><span class="val"><span class="status-badge ${statusClass[r.status]}">${r.status}</span></span></div>
+      <div class="detail-row"><span class="lbl">Waktu Pesan</span><span class="val">${formatDateTime(r.tanggal_pesan)}</span></div>
+      ${r.catatan ? `<div class="detail-row"><span class="lbl">Catatan</span><span class="val">${r.catatan}</span></div>` : ''}
+    `;
+    const waNo = r.wa.replace(/\D/g,'');
+    const waNum = waNo.startsWith('0') ? '62' + waNo.slice(1) : waNo;
+    const pesan = `Halo ${r.nama}, reservasi *${r.kamar}* Anda di Villa Nusantara (${formatDate(r.checkin)} – ${formatDate(r.checkout)}) sudah kami catat. Terima kasih! 🏨`;
+    document.getElementById('detailWaBtn').onclick = () => window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(pesan)}`, '_blank');
+    document.getElementById('detailModal').classList.add('active');
+  }
+  function closeDetail() { document.getElementById('detailModal').classList.remove('active'); }
+  document.getElementById('detailModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('detailModal')) closeDetail();
+  });
+
+  // ── FILTER ──
+  function getFiltered() {
+    const q  = document.getElementById('searchInput').value.toLowerCase();
+    const fk = document.getElementById('filterKamar').value;
+    const fs = document.getElementById('filterStatus').value;
+    return allData.filter(r => {
+      if (q  && !r.nama.toLowerCase().includes(q) && !r.wa.includes(q)) return false;
+      if (fk && r.kamar !== fk) return false;
+      if (fs && r.status !== fs) return false;
+      return true;
+    });
+  }
+
+  // ── RENDER TABLE ──
+  function render() {
+    const list = getFiltered();
+    document.getElementById('countBadge').textContent = list.length + ' data';
+    renderStatCards();
+
+    const area = document.getElementById('tableArea');
+    if (list.length === 0) {
+      area.innerHTML = `<div class="empty-state">
+        <div class="big-icon">📭</div>
+        <h3>Belum Ada Data Reservasi</h3>
+        <p>Data akan muncul setelah tamu melakukan pemesanan di halaman utama.</p>
+      </div>`;
+      return;
+    }
+
+    area.innerHTML = `<table>
+      <thead><tr>
+        <th>Nama Tamu</th><th>WhatsApp</th><th>Kamar</th>
+        <th>Check-in</th><th>Check-out</th><th>Total</th><th>Status</th><th>Aksi</th>
+      </tr></thead>
+      <tbody>
+        ${list.map(r => `
+          <tr>
+            <td><strong>${r.nama}</strong><br><span style="font-size:.75rem;color:var(--brown)">${formatDateTime(r.tanggal_pesan)}</span></td>
+            <td><a class="wa-link" href="https://wa.me/${toWaNum(r.wa)}" target="_blank">💬 ${r.wa}</a></td>
+            <td>${r.kamar}</td>
+            <td>${formatDate(r.checkin)}</td>
+            <td>${formatDate(r.checkout)}<br><span style="font-size:.75rem;color:var(--brown)">${r.malam} malam</span></td>
+            <td style="font-weight:600;color:var(--green)">${formatRp(r.total)}</td>
+            <td><span class="status-badge ${statusClass[r.status]}" onclick="ubahStatus(${r.id})" title="Klik ubah status">${r.status}</span></td>
+            <td>
+              <button onclick="lihatDetail(${r.id})" title="Detail" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:4px 6px;border-radius:6px;transition:background .2s" onmouseover="this.style.background='#e8f5e9'" onmouseout="this.style.background='none'">👁</button>
+              <button class="btn-del" onclick="hapus(${r.id})" title="Hapus">🗑</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+  }
+
+  function toWaNum(wa) {
+    const n = wa.replace(/\D/g,'');
+    return n.startsWith('0') ? '62' + n.slice(1) : n;
+  }
+
+  function renderStatCards() {
+    const all = allData;
+    const totalPemasukan = all.reduce((s,r) => s + Number(r.total||0), 0);
+    const menunggu    = all.filter(r => r.status === 'Menunggu').length;
+    const aktif       = all.filter(r => r.status === 'Konfirmasi' || r.status === 'Check-in').length;
+    document.getElementById('statCards').innerHTML = `
+      <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-val">${all.length}</div><div class="stat-lbl">Total Reservasi</div></div>
+      <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-val">${menunggu}</div><div class="stat-lbl">Menunggu Konfirmasi</div></div>
+      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val">${aktif}</div><div class="stat-lbl">Aktif / Check-in</div></div>
+      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val" style="font-size:1.3rem">${formatRp(totalPemasukan)}</div><div class="stat-lbl">Estimasi Pemasukan</div></div>
+    `;
+  }
+
+  // ── STATISTIK PAGE ──
+  function renderStatistikPage() {
+    const all = allData;
+    if (!all.length) {
+      document.getElementById('statsContent').innerHTML = `<div class="empty-state" style="margin-top:40px"><div class="big-icon">📊</div><h3>Belum Ada Data</h3><p>Statistik muncul setelah ada reservasi.</p></div>`;
+      return;
+    }
+    const kamarCount = {}; const kamarTotal = {}; const statusCount = {};
+    all.forEach(r => {
+      kamarCount[r.kamar] = (kamarCount[r.kamar]||0) + 1;
+      kamarTotal[r.kamar] = (kamarTotal[r.kamar]||0) + Number(r.total||0);
+      statusCount[r.status] = (statusCount[r.status]||0) + 1;
+    });
+    const maxCount = Math.max(...Object.values(kamarCount));
+    document.getElementById('statsContent').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="table-wrap" style="padding:24px">
+          <h3 style="font-family:'Playfair Display',serif;margin-bottom:20px">Reservasi per Kamar</h3>
+          ${Object.entries(kamarCount).map(([k,v]) => `
+            <div style="margin-bottom:18px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:.88rem"><span>${k}</span><strong>${v} reservasi</strong></div>
+              <div style="background:var(--cream);border-radius:8px;height:10px;overflow:hidden">
+                <div style="width:${(v/maxCount)*100}%;background:var(--green);height:100%;border-radius:8px"></div>
+              </div>
+              <div style="font-size:.78rem;color:var(--brown);margin-top:4px">${formatRp(kamarTotal[k])}</div>
+            </div>`).join('')}
+        </div>
+        <div class="table-wrap" style="padding:24px">
+          <h3 style="font-family:'Playfair Display',serif;margin-bottom:20px">Status Reservasi</h3>
+          ${Object.entries(statusCount).map(([s,v]) => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(139,99,71,.07)">
+              <span class="status-badge ${statusClass[s]||''}">${s}</span>
+              <strong>${v} tamu</strong>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="table-wrap" style="padding:24px;margin-top:20px">
+        <h3 style="font-family:'Playfair Display',serif;margin-bottom:16px">Reservasi Terbaru (5 Data)</h3>
+        <table><thead><tr><th>Nama</th><th>Kamar</th><th>Check-in</th><th>Total</th><th>Status</th></tr></thead>
+        <tbody>${all.slice(0,5).map(r=>`<tr>
+          <td><strong>${r.nama}</strong></td><td>${r.kamar}</td>
+          <td>${formatDate(r.checkin)}</td>
+          <td style="color:var(--green);font-weight:600">${formatRp(r.total)}</td>
+          <td><span class="status-badge ${statusClass[r.status]}">${r.status}</span></td>
+        </tr>`).join('')}</tbody></table>
+      </div>`;
+  }
+
+  // ── EXPORT CSV ──
+  function exportCSV() {
+    if (!allData.length) { showToast('Tidak ada data.', false); return; }
+    const header = ['ID','Nama','WhatsApp','Kamar','Check-in','Check-out','Malam','Total','Status','Waktu Pesan','Catatan'];
+    const rows = allData.map(r => [r.id,r.nama,r.wa,r.kamar,r.checkin,r.checkout,r.malam,r.total,r.status,r.tanggal_pesan,r.catatan||''].map(v=>`"${v}"`).join(','));
+    const csv = [header.join(','),...rows].join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+    a.download = `reservasi_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    showToast('✅ CSV didownload!');
+  }
+
+  // ── LOAD DATA dari Supabase ──
+  async function loadData() {
+    showLoading(true);
+    try {
+      allData = await fetchAll();
+    } catch(e) {
+      showToast('⚠️ Gagal konek Supabase. Cek konfigurasi.', false);
+      allData = [];
+    }
+    showLoading(false);
+    render();
+    if (document.getElementById('pageStatistik').style.display !== 'none') renderStatistikPage();
+  }
+
+  // ── REFRESH ──
+  function refreshData() { loadData(); showToast('🔄 Data diperbarui'); }
+
+  // ── PAGE SWITCH ──
+  function showPage(page) {
+    document.getElementById('pageReservasi').style.display  = page==='reservasi' ? '' : 'none';
+    document.getElementById('pageStatistik').style.display  = page==='statistik' ? '' : 'none';
+    document.querySelectorAll('.menu-item').forEach((el,i) => {
+      el.classList.toggle('active', (i===0&&page==='reservasi')||(i===1&&page==='statistik'));
+    });
+    if (page==='statistik') renderStatistikPage();
+  }
+
+  document.getElementById('subDate').textContent =
+    new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  // Auto refresh tiap 30 detik
+  loadData();
+  setInterval(loadData, 30000);
+</script>
+
+  function getData() {
+    return JSON.parse(localStorage.getItem(KEY) || '[]');
+  }
+  function setData(d) {
+    localStorage.setItem(KEY, JSON.stringify(d));
+  }
+
+  function formatRp(n) {
+    return 'Rp ' + Number(n).toLocaleString('id-ID');
+  }
+  function formatDate(str) {
+    if (!str) return '-';
+    return new Date(str).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+  }
+  function formatDateTime(str) {
+    if (!str) return '-';
+    return new Date(str).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // ── STATUS CYCLE ──
+  const statusOrder = ['Menunggu','Konfirmasi','Check-in','Check-out','Batal'];
+  const statusClass  = { 'Menunggu':'s-menunggu','Konfirmasi':'s-konfirmasi','Check-in':'s-checkin','Check-out':'s-checkout','Batal':'s-batal' };
+
+  function ubahStatus(id) {
+    const data = getData();
+    const idx  = data.findIndex(r => r.id === id);
+    if (idx < 0) return;
+    const cur  = statusOrder.indexOf(data[idx].status);
+    data[idx].status = statusOrder[(cur + 1) % statusOrder.length];
+    setData(data);
+    render(); showToast('Status diubah → ' + data[idx].status);
+  }
+
+  function hapus(id) {
+    if (!confirm('Hapus data reservasi ini?')) return;
+    const data = getData().filter(r => r.id !== id);
+    setData(data); render(); showToast('Data dihapus.');
+  }
+
+  function hapusSemua() {
+    if (!confirm('Hapus SEMUA data reservasi? Tindakan ini tidak bisa dibatalkan.')) return;
+    localStorage.removeItem(KEY); render(); showToast('Semua data dihapus.');
+  }
+
+  // ── DETAIL MODAL ──
+  function lihatDetail(id) {
+    const r = getData().find(x => x.id === id);
+    if (!r) return;
+    document.getElementById('detailContent').innerHTML = `
+      <div class="detail-row"><span class="lbl">ID</span><span class="val">#${r.id}</span></div>
+      <div class="detail-row"><span class="lbl">Nama</span><span class="val">${r.nama}</span></div>
+      <div class="detail-row"><span class="lbl">WhatsApp</span><span class="val">${r.wa}</span></div>
+      <div class="detail-row"><span class="lbl">Tipe Kamar</span><span class="val">${r.kamar}</span></div>
+      <div class="detail-row"><span class="lbl">Check-in</span><span class="val">${formatDate(r.checkin)}</span></div>
+      <div class="detail-row"><span class="lbl">Check-out</span><span class="val">${formatDate(r.checkout)}</span></div>
+      <div class="detail-row"><span class="lbl">Jumlah Malam</span><span class="val">${r.malam} malam</span></div>
+      <div class="detail-row"><span class="lbl">Total</span><span class="val" style="color:var(--green);font-weight:700">${formatRp(r.total)}</span></div>
+      <div class="detail-row"><span class="lbl">Status</span><span class="val"><span class="status-badge ${statusClass[r.status]}">${r.status}</span></span></div>
+      <div class="detail-row"><span class="lbl">Waktu Pesan</span><span class="val">${formatDateTime(r.tanggalPesan)}</span></div>
+      ${r.catatan ? `<div class="detail-row"><span class="lbl">Catatan</span><span class="val">${r.catatan}</span></div>` : ''}
+    `;
+    const waNo = r.wa.replace(/\D/g,'');
+    const waNum = waNo.startsWith('0') ? '62' + waNo.slice(1) : waNo;
+    const pesan = `Halo ${r.nama}, reservasi *${r.kamar}* Anda di Villa Nusantara (${formatDate(r.checkin)} – ${formatDate(r.checkout)}) sudah kami catat. Terima kasih! 🏨`;
+    document.getElementById('detailWaBtn').onclick = () => window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(pesan)}`, '_blank');
+    document.getElementById('detailModal').classList.add('active');
+  }
+  function closeDetail() {
+    document.getElementById('detailModal').classList.remove('active');
+  }
+  document.getElementById('detailModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('detailModal')) closeDetail();
+  });
+
+  // ── RENDER TABLE ──
+  function getFiltered() {
+    const q  = document.getElementById('searchInput').value.toLowerCase();
+    const fk = document.getElementById('filterKamar').value;
+    const fs = document.getElementById('filterStatus').value;
+    return getData().filter(r => {
+      if (q  && !r.nama.toLowerCase().includes(q) && !r.wa.includes(q)) return false;
+      if (fk && r.kamar !== fk) return false;
+      if (fs && r.status !== fs) return false;
+      return true;
+    });
+  }
+
+  function render() {
+    const list = getFiltered();
+    document.getElementById('countBadge').textContent = list.length + ' data';
+    renderStats();
+
+    const area = document.getElementById('tableArea');
+    if (list.length === 0) {
+      area.innerHTML = `<div class="empty-state">
+        <div class="big-icon">📭</div>
+        <h3>Belum Ada Data Reservasi</h3>
+        <p>Data akan muncul setelah tamu melakukan pemesanan di halaman utama.</p>
+      </div>`;
+      return;
+    }
+
+    area.innerHTML = `<table>
+      <thead><tr>
+        <th>Nama Tamu</th>
+        <th>WhatsApp</th>
+        <th>Kamar</th>
+        <th>Check-in</th>
+        <th>Check-out</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Aksi</th>
+      </tr></thead>
+      <tbody>
+        ${list.map(r => `
+          <tr>
+            <td><strong>${r.nama}</strong><br><span style="font-size:.75rem;color:var(--brown)">${formatDateTime(r.tanggalPesan)}</span></td>
+            <td>
+              <a class="wa-link" href="https://wa.me/${toWaNum(r.wa)}" target="_blank">💬 ${r.wa}</a>
+            </td>
+            <td>${r.kamar}</td>
+            <td>${formatDate(r.checkin)}</td>
+            <td>${formatDate(r.checkout)}<br><span style="font-size:.75rem;color:var(--brown)">${r.malam} malam</span></td>
+            <td style="font-weight:600;color:var(--green)">${formatRp(r.total)}</td>
+            <td>
+              <span class="status-badge ${statusClass[r.status]}" onclick="ubahStatus(${r.id})" title="Klik untuk ubah status">${r.status}</span>
+            </td>
+            <td>
+              <button onclick="lihatDetail(${r.id})" title="Detail" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:4px 6px;border-radius:6px;transition:background .2s" onmouseover="this.style.background='#e8f5e9'" onmouseout="this.style.background='none'">👁</button>
+              <button class="btn-del" onclick="hapus(${r.id})" title="Hapus">🗑</button>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>`;
+  }
+
+  function toWaNum(wa) {
+    const n = wa.replace(/\D/g,'');
+    return n.startsWith('0') ? '62' + n.slice(1) : n;
+  }
+
+  // ── STAT CARDS ──
+  function renderStats() {
+    const all = getData();
+    const totalPemasukan = all.reduce((s,r) => s + Number(r.total||0), 0);
+    const menunggu = all.filter(r => r.status === 'Menunggu').length;
+    const konfirmasi = all.filter(r => r.status === 'Konfirmasi' || r.status === 'Check-in').length;
+
+    document.getElementById('statCards').innerHTML = `
+      <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-val">${all.length}</div><div class="stat-lbl">Total Reservasi</div></div>
+      <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-val">${menunggu}</div><div class="stat-lbl">Menunggu Konfirmasi</div></div>
+      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val">${konfirmasi}</div><div class="stat-lbl">Aktif / Check-in</div></div>
+      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val" style="font-size:1.3rem">${formatRp(totalPemasukan)}</div><div class="stat-lbl">Estimasi Pemasukan</div></div>
+    `;
+  }
+
+  // ── STATISTIK PAGE ──
+  function renderStatistikPage() {
+    const all = getData();
+    if (all.length === 0) {
+      document.getElementById('statsContent').innerHTML = `<div class="empty-state" style="margin-top:40px"><div class="big-icon">📊</div><h3>Belum Ada Data</h3><p>Statistik akan muncul setelah ada reservasi masuk.</p></div>`;
+      return;
+    }
+
+    // Per kamar
+    const kamarCount = {};
+    const kamarTotal = {};
+    all.forEach(r => {
+      kamarCount[r.kamar] = (kamarCount[r.kamar] || 0) + 1;
+      kamarTotal[r.kamar] = (kamarTotal[r.kamar] || 0) + Number(r.total || 0);
+    });
+
+    // Per status
+    const statusCount = {};
+    all.forEach(r => { statusCount[r.status] = (statusCount[r.status] || 0) + 1; });
+
+    const maxCount = Math.max(...Object.values(kamarCount));
+
+    document.getElementById('statsContent').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap">
+
+        <div class="table-wrap" style="padding:24px">
+          <h3 style="font-family:'Playfair Display',serif;margin-bottom:20px">Reservasi per Kamar</h3>
+          ${Object.entries(kamarCount).map(([k,v]) => `
+            <div style="margin-bottom:18px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:.88rem">
+                <span>${k}</span>
+                <strong>${v} reservasi</strong>
+              </div>
+              <div style="background:var(--cream);border-radius:8px;height:10px;overflow:hidden">
+                <div style="width:${(v/maxCount)*100}%;background:var(--green);height:100%;border-radius:8px;transition:width .5s"></div>
+              </div>
+              <div style="font-size:.78rem;color:var(--brown);margin-top:4px">${formatRp(kamarTotal[k])}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="table-wrap" style="padding:24px">
+          <h3 style="font-family:'Playfair Display',serif;margin-bottom:20px">Status Reservasi</h3>
+          ${Object.entries(statusCount).map(([s,v]) => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(139,99,71,.07)">
+              <span class="status-badge ${statusClass[s] || ''}">${s}</span>
+              <strong>${v} tamu</strong>
+            </div>
+          `).join('')}
+        </div>
+
+      </div>
+
+      <div class="table-wrap" style="padding:24px;margin-top:20px">
+        <h3 style="font-family:'Playfair Display',serif;margin-bottom:16px">Reservasi Terbaru (5 Data)</h3>
+        <table>
+          <thead><tr><th>Nama</th><th>Kamar</th><th>Check-in</th><th>Total</th><th>Status</th></tr></thead>
+          <tbody>
+            ${all.slice(0,5).map(r => `
+              <tr>
+                <td><strong>${r.nama}</strong></td>
+                <td>${r.kamar}</td>
+                <td>${formatDate(r.checkin)}</td>
+                <td style="color:var(--green);font-weight:600">${formatRp(r.total)}</td>
+                <td><span class="status-badge ${statusClass[r.status]}">${r.status}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+
+</script>
+</body>
+</html>
