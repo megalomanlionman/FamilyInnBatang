@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel — Family Inn Batang</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --dark: #1f2937;
+            --gold: #d97706;
+            --green: #15803d;
+            --red: #b91c1c;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Inter', sans-serif; background:#f8fafc; color:#1f2937; }
+        .heading { font-family: 'Playfair Display', serif; }
+
+        .sidebar {
+            width: 260px;
+            background: var(--dark);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            padding: 24px 0;
+        }
+        .logo { font-size: 1.85rem; padding: 0 24px 32px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .menu-item {
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255,255,255,0.75);
+            text-decoration: none;
+            transition: 0.3s;
+        }
+        .menu-item:hover, .menu-item.active {
+            background: rgba(217, 119, 6, 0.25);
+            color: white;
+        }
+
+        .main-content { margin-left: 260px; padding: 32px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-primary { background: var(--gold); color: white; }
+        .btn-primary:hover { background: #b45309; }
+        .btn-danger { background: #fee2e2; color: var(--red); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        th, td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th { background: #f1f5f9; font-weight: 600; color: #374151; }
+        tr:hover { background: #f8fafc; }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .s-menunggu { background:#fef3c7; color:#b45309; }
+        .s-konfirmasi { background:#d1fae5; color:#10b981; }
+        .s-checkin { background:#dbeafe; color:#1e40af; }
+        .s-checkout { background:#f3e8ff; color:#7e22ce; }
+        .s-batal { background:#fee2e2; color:#b91c1c; }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 95vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--gold);
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo heading">Family <span style="color:#d97706">Inn</span></div>
+    <div class="menu-item active" onclick="showPage('reservasi')"><i class="fas fa-list"></i> Data Reservasi</div>
+    <div class="menu-item" onclick="showPage('statistik')"><i class="fas fa-chart-bar"></i> Statistik</div>
+    <div style="position:absolute; bottom:40px; width:100%; padding:0 24px;">
+        <a href="index.html" style="color:white; text-decoration:none; display:block; text-align:center; padding:14px; background:rgba(255,255,255,0.1); border-radius:10px;">
+            ← Kembali ke Website
+        </a>
+    </div>
+</div>
+
+<div class="main-content">
+    <div id="pageReservasi">
+        <div class="header">
+            <div>
+                <h1 class="heading" style="font-size:2.3rem;">Data Reservasi</h1>
+                <p id="subDate" style="color:#64748b; margin-top:4px;"></p>
+            </div>
+            <div>
+                <button class="btn" onclick="refreshData()">🔄 Refresh</button>
+                <button class="btn btn-primary" onclick="exportCSV()">⬇️ Export CSV</button>
+                <button class="btn btn-danger" onclick="hapusSemua()">🗑 Hapus Semua</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom:20px; display:flex; gap:12px; flex-wrap:wrap;">
+            <input type="text" id="searchInput" placeholder="Cari nama atau nomor WA..." 
+                   style="flex:1; min-width:280px; padding:14px; border:2px solid #e5e7eb; border-radius:12px;" onkeyup="renderTable()">
+            <select id="filterStatus" onchange="renderTable()" style="padding:14px; border:2px solid #e5e7eb; border-radius:12px;">
+                <option value="">Semua Status</option>
+                <option>Menunggu</option>
+                <option>Konfirmasi</option>
+                <option>Check-in</option>
+                <option>Check-out</option>
+                <option>Batal</option>
+            </select>
+        </div>
+
+        <table id="reservasiTable">
+            <thead>
+                <tr>
+                    <th>Nama Tamu</th>
+                    <th>WhatsApp</th>
+                    <th>Kamar</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="pageStatistik" style="display:none;">
+        <h1 class="heading" style="font-size:2.3rem; margin-bottom:30px;">Statistik Reservasi</h1>
+        <div id="statsContent">Fitur statistik akan ditampilkan di sini...</div>
+    </div>
+</div>
+
+<!-- Modal Edit -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Edit Reservasi</h3>
+            <button onclick="closeEditModal()" style="font-size:1.8rem;background:none;border:none;cursor:pointer;">×</button>
+        </div>
+        <div style="padding:24px;">
+            <input type="hidden" id="editId">
+
+            <div class="form-group">
+                <label>Nama Tamu</label>
+                <input type="text" id="editNama">
+            </div>
+            <div class="form-group">
+                <label>Nomor WhatsApp</label>
+                <input type="tel" id="editWa">
+            </div>
+            <div class="form-group">
+                <label>Kamar</label>
+                <input type="text" id="editKamar">
+            </div>
+            <div class="form-group">
+                <label>Tipe Sewa</label>
+                <select id="editTipeSewa">
+                    <option value="Harian">Harian</option>
+                    <option value="4 Jam">4 Jam</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Check-in (24 Jam)</label>
+                <input type="datetime-local" id="editCheckin">
+            </div>
+            <div class="form-group">
+                <label>Check-out (24 Jam)</label>
+                <input type="datetime-local" id="editCheckout">
+            </div>
+            <div class="form-group">
+                <label>Total (Rp)</label>
+                <input type="number" id="editTotal">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="editStatus">
+                    <option value="Menunggu">Menunggu</option>
+                    <option value="Konfirmasi">Konfirmasi</option>
+                    <option value="Check-in">Check-in</option>
+                    <option value="Check-out">Check-out</option>
+                    <option value="Batal">Batal</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Catatan</label>
+                <textarea id="editCatatan" rows="3"></textarea>
+            </div>
+
+            <button onclick="simpanEdit()" class="btn btn-primary" style="width:100%; padding:14px; font-size:1.1rem;">
+                💾 Simpan Perubahan
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================== KONFIGURASI SUPABASE ====================
+const SB_URL = "https://djfqagiougboawwpdwyw.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZnFhZ2lvdWdib2F3d3Bkd3l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNTg5NzQsImV4cCI6MjA5MjgzNDk3NH0.L7RzMWnp51BSDR5dNcDb4cQCdsSgKApCHOJgwvOF5J8";
+
+const headers = {
+    'apikey': SB_KEY,
+    'Authorization': `Bearer ${SB_KEY}`,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+};
+
+let allData = [];
+
+// ==================== HELPER ====================
+function formatRp(n) {
+    return 'Rp ' + Number(n).toLocaleString('id-ID');
+}
+
+function formatDate(str) {
+    if (!str) return '-';
+    return new Date(str).toLocaleDateString('id-ID', { 
+        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+    });
+}
+
+// ==================== CRUD ====================
+async function fetchAll() {
+    const res = await fetch(`${SB_URL}/rest/v1/reservasi?select=*&order=id.desc`, { headers });
+    if (!res.ok) throw new Error("Gagal mengambil data");
+    return res.json();
+}
+
+async function updateReservasi(id, data) {
+    const res = await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error("Gagal update");
+}
+
+async function deleteRow(id) {
+    await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, { method: 'DELETE', headers });
+}
+
+// ==================== RENDER TABLE ====================
+function renderTable() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const filterStatus = document.getElementById('filterStatus').value;
+
+    const filtered = allData.filter(row => {
+        const matchSearch = row.nama.toLowerCase().includes(search) || 
+                           (row.wa && row.wa.includes(search));
+        const matchStatus = !filterStatus || row.status === filterStatus;
+        return matchSearch && matchStatus;
+    });
+
+    const tbody = document.querySelector('#reservasiTable tbody');
+    tbody.innerHTML = filtered.map(r => `
+        <tr>
+            <td><strong>${r.nama}</strong></td>
+            <td><a href="https://wa.me/${r.wa.replace(/\D/g,'')}" target="_blank" style="color:var(--green); font-weight:500;">${r.wa}</a></td>
+            <td>${r.kamar}</td>
+            <td>${formatDate(r.checkin)}</td>
+            <td>${formatDate(r.checkout)}</td>
+            <td style="font-weight:600; color:var(--green);">${formatRp(r.total)}</td>
+            <td><span class="status-badge s-${r.status.toLowerCase()}" onclick="ubahStatus(${r.id})">${r.status}</span></td>
+            <td>
+                <button onclick="editReservasi(${r.id})" title="Edit" style="margin-right:8px; color:var(--gold);">✏️</button>
+                <button onclick="hapus(${r.id})" title="Hapus" style="color:var(--red);">🗑</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ==================== EDIT MODAL ====================
+function editReservasi(id) {
+    const r = allData.find(x => x.id === id);
+    if (!r) return;
+
+    document.getElementById('editId').value = r.id;
+    document.getElementById('editNama').value = r.nama || '';
+    document.getElementById('editWa').value = r.wa || '';
+    document.getElementById('editKamar').value = r.kamar || '';
+    document.getElementById('editTipeSewa').value = r.tipe_sewa || 'Harian';
+    document.getElementById('editCheckin').value = r.checkin ? new Date(r.checkin).toISOString().slice(0,16) : '';
+    document.getElementById('editCheckout').value = r.checkout ? new Date(r.checkout).toISOString().slice(0,16) : '';
+    document.getElementById('editTotal').value = r.total || '';
+    document.getElementById('editStatus').value = r.status || 'Menunggu';
+    document.getElementById('editCatatan').value = r.catatan || '';
+
+    document.getElementById('editModal').style.display = 'flex';
+}
+
+async function simpanEdit() {
+    const id = document.getElementById('editId').value;
+    if (!id) return;
+
+    const data = {
+        nama: document.getElementById('editNama').value.trim(),
+        wa: document.getElementById('editWa').value.trim(),
+        kamar: document.getElementById('editKamar').value.trim(),
+        tipe_sewa: document.getElementById('editTipeSewa').value,
+        checkin: new Date(document.getElementById('editCheckin').value).toISOString(),
+        checkout: new Date(document.getElementById('editCheckout').value).toISOString(),
+        total: parseInt(document.getElementById('editTotal').value) || 0,
+        status: document.getElementById('editStatus').value,
+        catatan: document.getElementById('editCatatan').value.trim()
+    };
+
+    if (!data.nama || !data.wa || !data.kamar) {
+        alert("Nama, WhatsApp, dan Kamar wajib diisi!");
+        return;
+    }
+
+    try {
+        await updateReservasi(id, data);
+        alert("✅ Data reservasi berhasil diperbarui!");
+        closeEditModal();
+        await loadData();
+    } catch(e) {
+        alert("❌ Gagal menyimpan perubahan. Coba lagi.");
+        console.error(e);
+    }
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+// ==================== FUNGSI LAIN ====================
+async function loadData() {
+    try {
+        allData = await fetchAll();
+        renderTable();
+    } catch(e) {
+        alert("Gagal terhubung ke database. Periksa koneksi Supabase.");
+    }
+}
+
+async function ubahStatus(id) {
+    if (!confirm("Ubah status reservasi ini?")) return;
+    
+    const row = allData.find(r => r.id === id);
+    const statuses = ['Menunggu', 'Konfirmasi', 'Check-in', 'Check-out', 'Batal'];
+    let next = statuses[(statuses.indexOf(row.status) + 1) % statuses.length];
+
+    try {
+        await updateReservasi(id, { status: next });
+        await loadData();
+        alert(`Status diubah menjadi: ${next}`);
+    } catch(e) {
+        alert("Gagal mengubah status.");
+    }
+}
+
+async function hapus(id) {
+    if (!confirm("Hapus data reservasi ini?")) return;
+    try {
+        await deleteRow(id);
+        await loadData();
+        alert("Data berhasil dihapus.");
+    } catch(e) {
+        alert("Gagal menghapus data.");
+    }
+}
+
+async function hapusSemua() {
+    if (!confirm("HAPUS SEMUA DATA? Tindakan ini tidak bisa dibatalkan!")) return;
+    try {
+        await fetch(`${SB_URL}/rest/v1/reservasi?id=gt.0`, { method: 'DELETE', headers });
+        await loadData();
+        alert("Semua data telah dihapus.");
+    } catch(e) {
+        alert("Gagal menghapus semua data.");
+    }
+}
+
+function exportCSV() {
+    if (!allData.length) return alert("Tidak ada data untuk diekspor.");
+
+    let csv = "ID,Nama,WA,Kamar,Tipe Sewa,Check-in,Check-out,Malam,Total,Status,Catatan\n";
+    allData.forEach(r => {
+        csv += `"${r.id}","${r.nama}","${r.wa}","${r.kamar}","${r.tipe_sewa}","${r.checkin}","${r.checkout}",${r.malam || 0},${r.total},"${r.status}","${r.catatan || ''}"\n`;
+    });
+
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `reservasi_familyinn_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+}
+
+function refreshData() {
+    loadData();
+}
+
+function showPage(page) {
+    document.getElementById('pageReservasi').style.display = page === 'reservasi' ? 'block' : 'none';
+    document.getElementById('pageStatistik').style.display = page === 'statistik' ? 'block' : 'none';
+}
+
+// ==================== INIT ====================
+document.getElementById('subDate').textContent = new Date().toLocaleDateString('id-ID', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+});
+
+loadData();
+setInterval(loadData, 30000); // Auto refresh setiap 30 detik
+</script>
+</body>
+</html>
