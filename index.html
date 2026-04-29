@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Inn Batang | Penginapan & Transit 24 Jam</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <style>
+        :root { --primary: #1e40af; --gold: #d97706; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:#f8fafc; color:#1f2937; line-height:1.6; }
+        .heading { font-family:'Playfair Display',serif; }
+        .btn { padding:14px 32px; border:none; border-radius:12px; font-weight:600; cursor:pointer; transition:0.3s; }
+        .btn-primary { background:var(--primary); color:white; }
+        .btn-primary:hover { background:#1e3a8a; }
+        .room-card { background:white; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.1); transition:0.4s; }
+        .room-card:hover { transform:translateY(-12px); }
+        .modal { 
+            position:fixed; inset:0; background:rgba(0,0,0,0.75); 
+            display:none; align-items:center; justify-content:center; z-index:2000; 
+        }
+        .modal-content { 
+            background:white; border-radius:16px; width:100%; max-width:480px; 
+            padding:28px; max-height:95vh; overflow-y:auto; 
+        }
+        .paket-toggle {
+            display:flex; background:#f3f4f6; padding:6px; border-radius:12px; margin:20px 0;
+        }
+        .paket-btn {
+            flex:1; padding:12px; border:none; border-radius:10px; font-weight:600; cursor:pointer;
+        }
+        .paket-btn.active { background:white; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+<nav style="background:white; box-shadow:0 2px 15px rgba(0,0,0,0.08); padding:18px 24px; position:sticky; top:0; z-index:1000;">
+    <div style="max-width:1200px; margin:auto; display:flex; justify-content:space-between; align-items:center;">
+        <a href="#" class="heading" style="font-size:1.9rem; color:#1e40af;">Family <span style="color:#d97706">Inn</span></a>
+        <a href="admin.html" target="_blank" class="btn btn-primary">Admin Panel</a>
+    </div>
+</nav>
+
+<section style="height:100vh; background:linear-gradient(rgba(0,0,0,0.65),rgba(0,0,0,0.65)), url('https://megalomanlionman.github.io/FamilyInnBatang/image_5b41d8.jpg') center/cover; color:white; display:flex; align-items:center; text-align:center;">
+    <div style="max-width:800px; margin:auto; padding:20px;">
+        <h1 class="heading" style="font-size:3.2rem; margin-bottom:16px;">Family Inn Batang</h1>
+        <p style="font-size:1.35rem; margin-bottom:32px;">Penginapan Nyaman • Transit 24 Jam</p>
+        <button onclick="document.getElementById('kamar').scrollIntoView({behavior:'smooth'})" 
+                class="btn btn-primary" style="font-size:1.2rem;">Pesan Kamar Sekarang</button>
+    </div>
+</section>
+
+<section id="kamar" style="padding:100px 24px; background:white;">
+    <div style="max-width:700px; margin:auto;">
+        <h2 class="heading" style="text-align:center; font-size:2.6rem; margin-bottom:50px;">Standard Room</h2>
+        <div class="room-card">
+            <div style="height:380px; background:url('https://megalomanlionman.github.io/FamilyInnBatang/image_5b41d8.jpg') center/cover no-repeat;"></div>
+            <div style="padding:40px; text-align:center;">
+                <p style="font-size:1.9rem; color:#d97706; font-weight:700;">Rp 170.000 / malam</p>
+                <button onclick="openModal()" class="btn btn-primary" style="width:100%; margin-top:25px; font-size:1.15rem;">
+                    Pesan Sekarang
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer style="background:#111827; color:white; text-align:center; padding:60px 20px;">
+    <p style="font-size:1.6rem;" class="heading">Family Inn Batang</p>
+    <p>Jl. Gabus Kav 4, Batang, Jawa Tengah • 24 Jam</p>
+</footer>
+
+<!-- Modal Booking -->
+<div id="bookingModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-bottom:20px; text-align:center;">Pesan Kamar</h3>
+        
+        <div class="paket-toggle">
+            <button id="btnHarian" onclick="setPaket('Harian')" class="paket-btn active">Harian</button>
+            <button id="btn4Jam" onclick="setPaket('4 Jam')" class="paket-btn">Transit 4 Jam</button>
+        </div>
+
+        <div id="formContent"></div>
+
+        <button onclick="submitBooking()" style="width:100%; margin-top:25px; background:#d97706; color:white; padding:16px; border:none; border-radius:12px; font-size:1.1rem; font-weight:700;">
+            Kirim Reservasi via WhatsApp
+        </button>
+        <button onclick="closeModal()" style="width:100%; margin-top:10px; background:#e5e7eb; padding:12px; border:none; border-radius:12px;">Batal</button>
+    </div>
+</div>
+
+<script>
+// === SUPABASE CONFIG ===
+const SB_URL = "https://djfqagiougboawwpdwyw.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZnFhZ2lvdWdib2F3d3Bkd3l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNTg5NzQsImV4cCI6MjA5MjgzNDk3NH0.L7RzMWnp51BSDR5dNcDb4cQCdsSgKApCHOJgwvOF5J8";
+
+let currentPaket = "Harian";
+
+function openModal() {
+    document.getElementById('bookingModal').style.display = 'flex';
+    setPaket('Harian');
+}
+
+function closeModal() {
+    document.getElementById('bookingModal').style.display = 'none';
+}
+
+function setPaket(paket) {
+    currentPaket = paket;
+    document.getElementById('btnHarian').classList.toggle('active', paket === 'Harian');
+    document.getElementById('btn4Jam').classList.toggle('active', paket === '4 Jam');
+
+    let html = `
+        <div style="margin-bottom:16px;">
+            <label style="display:block; margin-bottom:6px; font-weight:600;">Nama Tamu</label>
+            <input type="text" id="nama" style="width:100%; padding:12px; border:2px solid #ddd; border-radius:10px;" placeholder="Nama lengkap">
+        </div>
+        <div style="margin-bottom:16px;">
+            <label style="display:block; margin-bottom:6px; font-weight:600;">Nomor WhatsApp</label>
+            <input type="tel" id="wa" style="width:100%; padding:12px; border:2px solid #ddd; border-radius:10px;" placeholder="085347663500">
+        </div>`;
+
+    if (paket === "Harian") {
+        html += `
+            <div style="margin-bottom:16px;">
+                <label style="display:block; margin-bottom:6px; font-weight:600;">Check-in</label>
+                <input type="datetime-local" id="checkin" style="width:100%; padding:12px; border:2px solid #ddd; border-radius:10px;">
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block; margin-bottom:6px; font-weight:600;">Jumlah Malam</label>
+                <input type="number" id="malam" value="1" min="1" style="width:100%; padding:12px; border:2px solid #ddd; border-radius:10px;">
+            </div>`;
+    } else {
+        html += `
+            <div style="margin-bottom:16px;">
+                <label style="display:block; margin-bottom:6px; font-weight:600;">Tanggal & Jam Masuk (24 Jam)</label>
+                <input type="datetime-local" id="checkin" style="width:100%; padding:12px; border:2px solid #ddd; border-radius:10px;">
+            </div>`;
+    }
+    document.getElementById('formContent').innerHTML = html;
+}
+
+async function submitBooking() {
+    const nama = document.getElementById('nama').value.trim();
+    const wa = document.getElementById('wa').value.trim();
+    const checkinStr = document.getElementById('checkin').value;
+
+    if (!nama || !wa || !checkinStr) {
+        alert("Mohon isi Nama, Nomor WhatsApp, dan waktu Check-in!");
+        return;
+    }
+
+    const checkinDate = new Date(checkinStr);
+    let checkoutDate = new Date(checkinDate);
+    let malam = 0;
+    let total = 170000;
+
+    if (currentPaket === "Harian") {
+        malam = parseInt(document.getElementById('malam').value) || 1;
+        checkoutDate.setDate(checkoutDate.getDate() + malam);
+        total = malam * 170000;
+    } else {
+        // Transit 4 Jam
+        checkoutDate.setHours(checkoutDate.getHours() + 4);
+        total = 100000;
+    }
+
+    const payload = {
+        nama: nama,
+        wa: wa,
+        kamar: "Standard Room",
+        tipe_sewa: currentPaket,
+        checkin: checkinDate.toISOString(),
+        checkout: checkoutDate.toISOString(),
+        malam: malam,
+        total: total,
+        catatan: "Booking dari website"
+    };
+
+    try {
+        const res = await fetch(`${SB_URL}/rest/v1/reservasi`, {
+            method: 'POST',
+            headers: {
+                'apikey': SB_KEY,
+                'Authorization': `Bearer ${SB_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            const waText = `Halo Family Inn,%0A%0A*Nama:* ${nama}%0A*WA:* ${wa}%0A*Kamar:* Standard Room%0A*Paket:* ${currentPaket}%0A*Total:* Rp ${total.toLocaleString('id-ID')}%0A%0AMohon konfirmasi ketersediaan.`;
+            window.open(`https://wa.me/6285347663500?text=${waText}`, '_blank');
+            alert("✅ Reservasi berhasil disimpan dan dikirim ke WhatsApp Admin!");
+            closeModal();
+        } else {
+            alert("Gagal menyimpan reservasi. Silakan coba lagi.");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan. Silakan hubungi admin langsung via WhatsApp.");
+    }
+}
+
+// Set default waktu ke sekarang (format 24 jam)
+setTimeout(() => {
+    const now = new Date();
+    now.setMinutes(Math.ceil(now.getMinutes() / 15) * 15); // bulatkan ke 15 menit terdekat
+    const defaultTime = now.toISOString().slice(0,16);
+    const checkinInput = document.getElementById('checkin');
+    if (checkinInput) checkinInput.value = defaultTime;
+}, 500);
+</script>
+</body>
+</html>
