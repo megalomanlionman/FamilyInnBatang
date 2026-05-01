@@ -242,20 +242,26 @@ function renderTable() {
 
 // ==================== HAPUS (VERSI DIPERBAIKI) ====================
 async function hapus(id) {
-    if (!confirm("Yakin ingin menghapus reservasi ini?\nTindakan ini tidak bisa dibatalkan.")) {
+    if (!confirm("Yakin ingin menghapus reservasi ID #" + id + "?\n\nTindakan ini TIDAK BISA dibatalkan!")) {
         return;
     }
 
     try {
-        const success = await deleteRow(id);
-        if (success) {
+        console.log("Menghapus ID:", id);   // Untuk debugging
+
+        const res = await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: headers
+        });
+
+        if (res.ok) {
             alert("✅ Data berhasil dihapus.");
-            // Refresh data dari server
-            await loadData();
+            await loadData();   // Refresh tabel
         } else {
-            alert("❌ Gagal menghapus data.");
+            const errorText = await res.text();
+            alert(`❌ Gagal menghapus data.\nStatus: ${res.status}\n${errorText}`);
         }
-    } catch(e) {
+    } catch (e) {
         console.error(e);
         alert("❌ Terjadi kesalahan saat menghapus data.");
     }
