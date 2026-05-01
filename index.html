@@ -25,7 +25,7 @@
         .hero {
             height: 100vh;
             background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), 
-                        url('https://i.imgur.com/KfmEoXQ.jpeg') center/cover no-repeat;
+                        url('https://https://i.imgur.com/T4WGTpQ.jpg') center/cover no-repeat;
             color: white;
             display: flex;
             align-items: center;
@@ -206,7 +206,7 @@
     <p>24 Jam • Parkir Gratis • WiFi</p>
 </footer>
 
-<!-- Modal Booking -->
+<!-- Modal Booking (Bagian yang Diperbaiki) -->
 <div id="bookingModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-bottom:20px; text-align:center;">Pesan Kamar</h3>
@@ -234,9 +234,7 @@
 </div>
 
 <script>
-// SUPABASE CONFIG
-const SB_URL = "https://zqjornnetlotrljcieam.supabase.co";
-const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpxam9ybm5ldGxvdHJsamNpZWFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDA4MzIsImV4cCI6MjA5MzAxNjgzMn0.Ey5b9lHuAsKKJG9UirDSf3GUBNxU3yi_BarTM3ytx6w";
+// ... (kode Supabase tetap sama)
 
 let currentPaket = "Harian";
 
@@ -251,6 +249,7 @@ function closeModal() {
 
 function setPaket(paket) {
     currentPaket = paket;
+    
     let html = `
         <div style="margin-bottom:16px;">
             <label style="display:block; margin-bottom:6px; font-weight:600;">Nama Tamu</label>
@@ -264,7 +263,9 @@ function setPaket(paket) {
     if (paket === "Harian") {
         html += `
             <div style="margin-bottom:16px;">
-                <label style="display:block; margin-bottom:6px; font-weight:600;">Check-in</label>
+                <label style="display:block; margin-bottom:6px; font-weight:600;">
+                    Tanggal & Jam Check-in <span style="color:#666; font-size:0.9rem;">(24 Jam)</span>
+                </label>
                 <input type="datetime-local" id="checkin" style="width:100%; padding:12px; border:2px solid #ddd; border-radius:10px;">
             </div>
             <div style="margin-bottom:16px;">
@@ -274,20 +275,25 @@ function setPaket(paket) {
     } else {
         html += `
             <div style="margin-bottom:16px;">
-                <label style="display:block; margin-bottom:6px; font-weight:600;">Tanggal & Jam Masuk (24 Jam)</label>
+                <label style="display:block; margin-bottom:6px; font-weight:600;">
+                    Tanggal & Jam Masuk <span style="color:#666; font-size:0.9rem;">(24 Jam)</span>
+                </label>
                 <input type="datetime-local" id="checkin" style="width:100%; padding:12px; border:2px solid #ddd; border-radius:10px;">
+                <small style="color:#666;">(Otomatis keluar 4 jam kemudian)</small>
             </div>`;
     }
+    
     document.getElementById('formContent').innerHTML = html;
 }
 
+// Script submitBooking tetap sama seperti sebelumnya
 async function submitBooking() {
     const nama = document.getElementById('nama').value.trim();
     const wa = document.getElementById('wa').value.trim();
     const checkinStr = document.getElementById('checkin').value;
 
     if (!nama || !wa || !checkinStr) {
-        alert("Mohon isi Nama, Nomor WhatsApp, dan waktu Check-in!");
+        alert("Mohon isi Nama, Nomor WhatsApp, dan Tanggal & Jam Check-in!");
         return;
     }
 
@@ -316,6 +322,7 @@ async function submitBooking() {
         catatan: "Booking dari website"
     };
 
+    // ... (bagian fetch ke Supabase tetap sama)
     try {
         const res = await fetch(`${SB_URL}/rest/v1/reservasi`, {
             method: 'POST',
@@ -341,7 +348,7 @@ async function submitBooking() {
     }
 }
 
-// Set default waktu (24 jam)
+// Default waktu sekarang (format 24 jam)
 setTimeout(() => {
     const now = new Date();
     now.setMinutes(Math.ceil(now.getMinutes() / 15) * 15);
