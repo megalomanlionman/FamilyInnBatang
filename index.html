@@ -297,7 +297,7 @@ function submitBooking() {
         checkoutDate.setHours(checkoutDate.getHours() + 4);
     }
 
-    // Buat pesan WhatsApp yang rapi
+    // Buat pesan WhatsApp
     const checkinFormatted = new Date(checkinDate).toLocaleString('id-ID', {
         day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
@@ -306,7 +306,7 @@ function submitBooking() {
     });
 
     const waText = `Halo Family Inn,\n\n` +
-        `*Nama:* ${nama}\n` +
+        `Nama: *${nama}\n*` +
         `*WA:* ${wa}\n` +
         `*Kamar:* Standard Room\n` +
         `*Paket:* ${currentPaket}\n` +
@@ -318,20 +318,18 @@ function submitBooking() {
 
     const whatsappURL = `https://wa.me/6282133851456?text=${encodeURIComponent(waText)}`;
 
-    // Langsung buka WhatsApp
     alert("Sedang membuka WhatsApp...");
 
-    // Teknik terbaik untuk iPhone
+    // Teknik paling agresif untuk iPhone
     setTimeout(() => {
         window.location.href = whatsappURL;
-    }, 500);
+    }, 300);
 
-    // Fallback
     setTimeout(() => {
         window.open(whatsappURL, '_blank');
-    }, 1500);
+    }, 1200);
 
-    // Simpan ke database di background (tanpa mengganggu pembukaan WA)
+    // Simpan ke database di background
     setTimeout(async () => {
         const payload = {
             nama: nama,
@@ -355,9 +353,8 @@ function submitBooking() {
                 },
                 body: JSON.stringify(payload)
             });
-            console.log("✅ Data berhasil disimpan ke database");
         } catch (e) {
-            console.error("Gagal simpan ke database:", e);
+            console.error("Gagal simpan database:", e);
         }
     }, 800);
 
