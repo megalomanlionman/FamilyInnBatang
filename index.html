@@ -274,7 +274,7 @@ function setPaket(paket) {
     document.getElementById('formContent').innerHTML = html;
 }
 
-async function submitBooking() {
+function submitBooking() {
     const nama = document.getElementById('nama').value.trim();
     const wa = document.getElementById('wa').value.trim();
     const checkinStr = document.getElementById('checkin').value;
@@ -297,37 +297,41 @@ async function submitBooking() {
         checkoutDate.setHours(checkoutDate.getHours() + 4);
     }
 
-    // Buat pesan dengan \n biasa (bukan %0A)
-    let waText = `Halo Family Inn,\n\n`;
-    waText += `*Nama:* ${nama}\n`;
-    waText += `*WA:* ${wa}\n`;
-    waText += `*Kamar:* Standard Room\n`;
-    waText += `*Paket:* ${currentPaket}\n`;
-    waText += `*Check-in:* ${checkinDate.toLocaleString('id-ID', {day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'})}\n`;
-    waText += `*Check-out:* ${checkoutDate.toLocaleString('id-ID', {day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'})}\n`;
-    
-    if (currentPaket === "Harian") {
-        waText += `*Jumlah Malam:* ${malam} malam\n`;
-    }
-    
-    waText += `*Total:* Rp ${total.toLocaleString('id-ID')}\n\n`;
-    waText += `Mohon konfirmasi ketersediaan dan status reservasi. Terima kasih! 🙏`;
+    // Buat pesan WhatsApp yang rapi
+    const checkinFormatted = new Date(checkinDate).toLocaleString('id-ID', {
+        day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+    const checkoutFormatted = new Date(checkoutDate).toLocaleString('id-ID', {
+        day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    const waText = `Halo Family Inn,\n\n` +
+        `*Nama:* ${nama}\n` +
+        `*WA:* ${wa}\n` +
+        `*Kamar:* Standard Room\n` +
+        `*Paket:* ${currentPaket}\n` +
+        `*Check-in:* ${checkinFormatted}\n` +
+        `*Check-out:* ${checkoutFormatted}\n` +
+        `${currentPaket === "Harian" ? `*Jumlah Malam:* ${malam} malam\n` : ''}` +
+        `*Total:* Rp ${total.toLocaleString('id-ID')}\n\n` +
+        `Mohon konfirmasi ketersediaan dan status reservasi. Terima kasih! 🙏`;
 
     const whatsappURL = `https://wa.me/6282133851456?text=${encodeURIComponent(waText)}`;
 
-    // Teknik terbaik untuk iPhone
-    alert("✅ Reservasi berhasil!\n\nSedang membuka WhatsApp...");
+    // Langsung buka WhatsApp
+    alert("Sedang membuka WhatsApp...");
 
+    // Teknik terbaik untuk iPhone
     setTimeout(() => {
         window.location.href = whatsappURL;
-    }, 600);
+    }, 500);
 
     // Fallback
     setTimeout(() => {
         window.open(whatsappURL, '_blank');
-    }, 1800);
+    }, 1500);
 
-    // Simpan ke database di background
+    // Simpan ke database di background (tanpa mengganggu pembukaan WA)
     setTimeout(async () => {
         const payload = {
             nama: nama,
@@ -351,11 +355,11 @@ async function submitBooking() {
                 },
                 body: JSON.stringify(payload)
             });
-            console.log("Data tersimpan ke database");
+            console.log("✅ Data berhasil disimpan ke database");
         } catch (e) {
-            console.error("Gagal simpan database:", e);
+            console.error("Gagal simpan ke database:", e);
         }
-    }, 1000);
+    }, 800);
 
     closeModal();
 }
