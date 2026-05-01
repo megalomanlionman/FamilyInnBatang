@@ -297,67 +297,65 @@ async function submitBooking() {
         checkoutDate.setHours(checkoutDate.getHours() + 4);
     }
 
-    const payload = {
-        nama: nama,
-        wa: wa,
-        kamar: "Standard Room",
-        tipe_sewa: currentPaket,
-        checkin: checkinDate.toISOString(),
-        checkout: checkoutDate.toISOString(),
-        malam: malam,
-        total: total,
-        catatan: "Booking dari website"
-    };
+    // Format pesan WhatsApp
+    const checkinFormatted = new Date(checkinDate).toLocaleString('id-ID', {
+        day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+    const checkoutFormatted = new Date(checkoutDate).toLocaleString('id-ID', {
+        day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
 
-    try {
-        const res = await fetch(`${SB_URL}/rest/v1/reservasi`, {
-            method: 'POST',
-            headers: {
-                'apikey': SB_KEY,
-                'Authorization': `Bearer ${SB_KEY}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=representation'
-            },
-            body: JSON.stringify(payload)
-        });
+    const waText = `Halo Family Inn,%0A%0A` +
+        `*Nama:* ${nama}%0A` +
+        `*WA:* ${wa}%0A` +
+        `*Kamar:* Standard Room%0A` +
+        `*Paket:* ${currentPaket}%0A` +
+        `*Check-in:* ${checkinFormatted}%0A` +
+        `*Check-out:* ${checkoutFormatted}%0A` +
+        `${currentPaket === "Harian" ? `*Jumlah Malam:* ${malam} malam%0A` : ''}` +
+        `*Total:* Rp ${total.toLocaleString('id-ID')}%0A%0A` +
+        `Mohon konfirmasi ketersediaan dan status reservasi. Terima kasih! 🙏`;
 
-        if (res.ok) {
-            // Format tanggal dan jam yang rapi
-            const checkinFormatted = new Date(checkinDate).toLocaleString('id-ID', {
-                day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    const whatsappURL = `https://wa.me/6282133851456?text=${encodeURIComponent(waText)}`;
+
+    // Langsung buka WhatsApp dulu
+    alert("Sedang membuka WhatsApp...");
+
+    // Buka WhatsApp
+    window.location.href = whatsappURL;
+
+    // Simpan ke database di background (tanpa menunggu)
+    setTimeout(async () => {
+        const payload = {
+            nama: nama,
+            wa: wa,
+            kamar: "Standard Room",
+            tipe_sewa: currentPaket,
+            checkin: checkinDate.toISOString(),
+            checkout: checkoutDate.toISOString(),
+            malam: malam,
+            total: total,
+            catatan: "Booking dari website"
+        };
+
+        try {
+            await fetch(`${SB_URL}/rest/v1/reservasi`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SB_KEY,
+                    'Authorization': `Bearer ${SB_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
             });
-            const checkoutFormatted = new Date(checkoutDate).toLocaleString('id-ID', {
-                day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
-            });
-
-            const waText = `Halo Family Inn,%0A%0A` +
-                `*Nama:* ${nama}%0A` +
-                `*WA:* ${wa}%0A` +
-                `*Kamar:* Standard Room%0A` +
-                `*Paket:* ${currentPaket}%0A` +
-                `*Check-in:* ${checkinFormatted}%0A` +
-                `*Check-out:* ${checkoutFormatted}%0A` +
-                `${currentPaket === "Harian" ? `*Jumlah Malam:* ${malam} malam%0A` : ''}` +
-                `*Total:* Rp ${total.toLocaleString('id-ID')}%0A%0A` +
-                `Mohon konfirmasi ketersediaan dan status reservasi. Terima kasih! 🙏`;
-
-            // Cara terbaik untuk membuka WhatsApp di iPhone & Android
-            const whatsappURL = `https://wa.me/6282133851456?text=${encodeURIComponent(waText)}`;
-            
-            // Teknik khusus untuk iOS
-            setTimeout(() => {
-                window.location.href = whatsappURL;
-            }, 100);
-
-            alert("✅ Reservasi berhasil disimpan!\n\nSedang membuka WhatsApp...");
-            closeModal();
-        } else {
-            alert(`❌ Gagal menyimpan data. Status: ${res.status}`);
+            console.log("✅ Data berhasil disimpan ke database");
+        } catch (err) {
+            console.error("Gagal menyimpan ke database:", err);
+            // Tidak perlu alert, karena WA sudah terbuka
         }
-    } catch (err) {
-        console.error(err);
-        alert("❌ Terjadi kesalahan koneksi.\nPastikan Supabase aktif dan tabel 'reservasi' sudah dibuat.");
-    }
+    }, 1000); // Delay 1 detik agar WhatsApp sempat terbuka
+
+    closeModal();
 }
 
 // Set default waktu (24 jam)
