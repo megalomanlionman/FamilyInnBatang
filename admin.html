@@ -94,18 +94,15 @@
         }
         tr:hover { background: #f8fafc; }
 
-        .status-badge {
-            padding: 6px 14px;
-            border-radius: 9999px;
-            font-size: 0.85rem;
+        /* Dropdown Status */
+        .status-dropdown {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
             font-weight: 600;
             cursor: pointer;
         }
-        .s-menunggu { background:#fef3c7; color:#b45309; }
-        .s-konfirmasi { background:#d1fae5; color:#10b981; }
-        .s-checkin { background:#dbeafe; color:#1e40af; }
-        .s-checkout { background:#f3e8ff; color:#7e22ce; }
-        .s-batal { background:#fee2e2; color:#b91c1c; }
     </style>
 </head>
 <body>
@@ -201,6 +198,14 @@ async function fetchAll() {
     return res.json();
 }
 
+async function updateReservasi(id, data) {
+    await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(data)
+    });
+}
+
 async function deleteRow(id) {
     const res = await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, {
         method: 'DELETE',
@@ -209,7 +214,7 @@ async function deleteRow(id) {
     return res.ok;
 }
 
-// ==================== RENDER TABLE ====================
+// ==================== RENDER TABLE DENGAN DROPDOWN STATUS ====================
 function renderTable() {
     const search = document.getElementById('searchInput').value.toLowerCase();
     const filterStatus = document.getElementById('filterStatus').value;
@@ -231,7 +236,15 @@ function renderTable() {
             <td>${formatDate(r.checkin)}</td>
             <td>${formatDate(r.checkout)}</td>
             <td style="font-weight:600; color:var(--green);">${formatRp(r.total)}</td>
-            <td><span class="status-badge s-${r.status.toLowerCase()}" onclick="ubahStatus(${r.id})">${r.status}</span></td>
+            <td>
+                <select class="status-dropdown" onchange="updateStatus(${r.id}, this.value)">
+                    <option value="Menunggu" ${r.status === 'Menunggu' ? 'selected' : ''}>Menunggu</option>
+                    <option value="Konfirmasi" ${r.status === 'Konfirmasi' ? 'selected' : ''}>Konfirmasi</option>
+                    <option value="Check-in" ${r.status === 'Check-in' ? 'selected' : ''}>Check-in</option>
+                    <option value="Check-out" ${r.status === 'Check-out' ? 'selected' : ''}>Check-out</option>
+                    <option value="Batal" ${r.status === 'Batal' ? 'selected' : ''}>Batal</option>
+                </select>
+            </td>
             <td>
                 <button onclick="editReservasi(${r.id})" title="Edit" style="margin-right:8px; color:var(--gold);">✏️</button>
                 <button onclick="hapus(${r.id})" title="Hapus" style="color:var(--red);">🗑</button>
@@ -240,28 +253,39 @@ function renderTable() {
     `).join('');
 }
 
-// ==================== HAPUS (VERSI DIPERBAIKI) ====================
-async function hapus(id) {
-    if (!confirm("Yakin ingin menghapus reservasi ID #" + id + "?\n\nTindakan ini TIDAK BISA dibatalkan!")) {
+// ==================== UPDATE STATUS DARI DROPDOWN ====================
+async function updateStatus(id, newStatus) {
+    if (!confirm(`Ubah status menjadi "${newStatus}"?`)) {
+        // Reset dropdown ke nilai lama jika dibatalkan
+        await loadData();
         return;
     }
 
     try {
-        console.log("Menghapus ID:", id);   // Untuk debugging
+        await updateReservasi(id, { status: newStatus });
+        alert(`Status berhasil diubah menjadi: ${newStatus}`);
+        await loadData();
+    } catch(e) {
+        alert("Gagal mengubah status.");
+        await loadData(); // Refresh untuk mengembalikan nilai lama
+    }
+}
 
-        const res = await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, {
-            method: 'DELETE',
-            headers: headers
-        });
+// ==================== HAPUS ====================
+async function hapus(id) {
+    if (!confirm(`Yakin ingin menghapus reservasi ID #${id}?\n\nTindakan ini TIDAK BISA dibatalkan!`)) {
+        return;
+    }
 
-        if (res.ok) {
+    try {
+        const success = await deleteRow(id);
+        if (success) {
             alert("✅ Data berhasil dihapus.");
-            await loadData();   // Refresh tabel
+            await loadData();
         } else {
-            const errorText = await res.text();
-            alert(`❌ Gagal menghapus data.\nStatus: ${res.status}\n${errorText}`);
+            alert("❌ Gagal menghapus data.");
         }
-    } catch (e) {
+    } catch(e) {
         console.error(e);
         alert("❌ Terjadi kesalahan saat menghapus data.");
     }
@@ -275,26 +299,6 @@ async function loadData() {
     } catch(e) {
         console.error(e);
         alert("Gagal terhubung ke database.");
-    }
-}
-
-async function ubahStatus(id) {
-    if (!confirm("Ubah status reservasi ini?")) return;
-    
-    const row = allData.find(r => r.id === id);
-    const statuses = ['Menunggu', 'Konfirmasi', 'Check-in', 'Check-out', 'Batal'];
-    let next = statuses[(statuses.indexOf(row.status) + 1) % statuses.length];
-
-    try {
-        await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, {
-            method: 'PATCH',
-            headers,
-            body: JSON.stringify({ status: next })
-        });
-        await loadData();
-        alert(`Status diubah menjadi: ${next}`);
-    } catch(e) {
-        alert("Gagal mengubah status.");
     }
 }
 
