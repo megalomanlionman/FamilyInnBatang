@@ -106,52 +106,6 @@
         .s-checkin { background:#dbeafe; color:#1e40af; }
         .s-checkout { background:#f3e8ff; color:#7e22ce; }
         .s-batal { background:#fee2e2; color:#b91c1c; }
-
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            padding: 20px;
-        }
-        .modal-content {
-            background: white;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 520px;
-            max-height: 95vh;
-            overflow-y: auto;
-        }
-        .modal-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .form-group {
-            margin-bottom: 18px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #374151;
-        }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            font-size: 1rem;
-        }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            border-color: var(--gold);
-            outline: none;
-        }
     </style>
 </head>
 <body>
@@ -211,78 +165,10 @@
             <tbody></tbody>
         </table>
     </div>
-
-    <div id="pageStatistik" style="display:none;">
-        <h1 class="heading" style="font-size:2.3rem; margin-bottom:30px;">Statistik Reservasi</h1>
-        <div id="statsContent">Fitur statistik sedang dikembangkan...</div>
-    </div>
-</div>
-
-<!-- Modal Edit -->
-<div id="editModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Edit Reservasi</h3>
-            <button onclick="closeEditModal()" style="font-size:1.8rem; background:none; border:none; cursor:pointer;">×</button>
-        </div>
-        <div style="padding:24px;">
-            <input type="hidden" id="editId">
-
-            <div class="form-group">
-                <label>Nama Tamu</label>
-                <input type="text" id="editNama">
-            </div>
-            <div class="form-group">
-                <label>Nomor WhatsApp</label>
-                <input type="tel" id="editWa">
-            </div>
-            <div class="form-group">
-                <label>Kamar</label>
-                <input type="text" id="editKamar">
-            </div>
-            <div class="form-group">
-                <label>Paket Sewa</label>
-                <select id="editTipeSewa">
-                    <option value="Harian">Harian</option>
-                    <option value="4 Jam">Transit 4 Jam</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Check-in (24 Jam)</label>
-                <input type="datetime-local" id="editCheckin">
-            </div>
-            <div class="form-group">
-                <label>Check-out (24 Jam)</label>
-                <input type="datetime-local" id="editCheckout">
-            </div>
-            <div class="form-group">
-                <label>Total (Rp)</label>
-                <input type="number" id="editTotal">
-            </div>
-            <div class="form-group">
-                <label>Status</label>
-                <select id="editStatus">
-                    <option value="Menunggu">Menunggu</option>
-                    <option value="Konfirmasi">Konfirmasi</option>
-                    <option value="Check-in">Check-in</option>
-                    <option value="Check-out">Check-out</option>
-                    <option value="Batal">Batal</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Catatan</label>
-                <textarea id="editCatatan" rows="3"></textarea>
-            </div>
-
-            <button onclick="simpanEdit()" class="btn btn-primary" style="width:100%; padding:14px; font-size:1.1rem;">
-                💾 Simpan Perubahan
-            </button>
-        </div>
-    </div>
 </div>
 
 <script>
-// ==================== KONFIGURASI SUPABASE ====================
+// ==================== SUPABASE CONFIG ====================
 const SB_URL = "https://zqjornnetlotrljcieam.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpxam9ybm5ldGxvdHJsamNpZWFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDA4MzIsImV4cCI6MjA5MzAxNjgzMn0.Ey5b9lHuAsKKJG9UirDSf3GUBNxU3yi_BarTM3ytx6w";
 
@@ -302,7 +188,7 @@ function formatRp(n) {
 
 function formatDate(str) {
     if (!str) return '-';
-    return new Date(str).toLocaleDateString('id-ID', { 
+    return new Date(str).toLocaleString('id-ID', { 
         day: '2-digit', month: 'short', year: 'numeric', 
         hour: '2-digit', minute: '2-digit' 
     });
@@ -316,16 +202,19 @@ async function fetchAll() {
 }
 
 async function updateReservasi(id, data) {
-    const res = await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, {
+    await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify(data)
     });
-    if (!res.ok) throw new Error("Gagal update");
 }
 
 async function deleteRow(id) {
-    await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, { method: 'DELETE', headers });
+    const res = await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, {
+        method: 'DELETE',
+        headers
+    });
+    if (!res.ok) throw new Error("Gagal menghapus");
 }
 
 // ==================== RENDER TABLE ====================
@@ -352,66 +241,25 @@ function renderTable() {
             <td style="font-weight:600; color:var(--green);">${formatRp(r.total)}</td>
             <td><span class="status-badge s-${r.status.toLowerCase()}" onclick="ubahStatus(${r.id})">${r.status}</span></td>
             <td>
-                <button onclick="editReservasi(${r.id})" title="Edit" style="margin-right:8px; color:var(--gold);">✏️</button>
-                <button onclick="hapus(${r.id})" title="Hapus" style="color:var(--red);">🗑</button>
+                <button onclick="editReservasi(${r.id})" title="Edit" style="margin-right:8px; color:var(--gold); font-size:1.1rem;">✏️</button>
+                <button onclick="hapus(${r.id})" title="Hapus" style="color:var(--red); font-size:1.2rem;">🗑</button>
             </td>
         </tr>
     `).join('');
 }
 
-// ==================== EDIT MODAL ====================
-function editReservasi(id) {
-    const r = allData.find(x => x.id === id);
-    if (!r) return;
-
-    document.getElementById('editId').value = r.id;
-    document.getElementById('editNama').value = r.nama || '';
-    document.getElementById('editWa').value = r.wa || '';
-    document.getElementById('editKamar').value = r.kamar || '';
-    document.getElementById('editTipeSewa').value = r.tipe_sewa || 'Harian';
-    document.getElementById('editCheckin').value = r.checkin ? new Date(r.checkin).toISOString().slice(0,16) : '';
-    document.getElementById('editCheckout').value = r.checkout ? new Date(r.checkout).toISOString().slice(0,16) : '';
-    document.getElementById('editTotal').value = r.total || '';
-    document.getElementById('editStatus').value = r.status || 'Menunggu';
-    document.getElementById('editCatatan').value = r.catatan || '';
-
-    document.getElementById('editModal').style.display = 'flex';
-}
-
-async function simpanEdit() {
-    const id = document.getElementById('editId').value;
-    if (!id) return;
-
-    const data = {
-        nama: document.getElementById('editNama').value.trim(),
-        wa: document.getElementById('editWa').value.trim(),
-        kamar: document.getElementById('editKamar').value.trim(),
-        tipe_sewa: document.getElementById('editTipeSewa').value,
-        checkin: new Date(document.getElementById('editCheckin').value).toISOString(),
-        checkout: new Date(document.getElementById('editCheckout').value).toISOString(),
-        total: parseInt(document.getElementById('editTotal').value) || 0,
-        status: document.getElementById('editStatus').value,
-        catatan: document.getElementById('editCatatan').value.trim()
-    };
-
-    if (!data.nama || !data.wa || !data.kamar) {
-        alert("Nama, WhatsApp, dan Kamar wajib diisi!");
-        return;
-    }
+// ==================== HAPUS FUNCTION (Diperbaiki) ====================
+async function hapus(id) {
+    if (!confirm("Yakin ingin menghapus reservasi ini?")) return;
 
     try {
-        await updateReservasi(id, data);
-        alert("✅ Data reservasi berhasil diperbarui!");
-        closeEditModal();
-        await loadData();
+        await deleteRow(id);
+        alert("✅ Data berhasil dihapus.");
+        await loadData();        // Refresh tabel
     } catch(e) {
-        alert("❌ Gagal menyimpan perubahan.");
         console.error(e);
+        alert("❌ Gagal menghapus data. Silakan coba lagi.");
     }
-}
-
-function closeEditModal() {
-    document.getElementById('editModal').style.display = 'none';
 }
 
 // ==================== FUNGSI LAIN ====================
@@ -420,7 +268,8 @@ async function loadData() {
         allData = await fetchAll();
         renderTable();
     } catch(e) {
-        alert("Gagal terhubung ke database. Periksa koneksi Supabase Anda.");
+        console.error(e);
+        alert("Gagal terhubung ke database.");
     }
 }
 
@@ -434,20 +283,9 @@ async function ubahStatus(id) {
     try {
         await updateReservasi(id, { status: next });
         await loadData();
-        alert(`Status berhasil diubah menjadi: ${next}`);
+        alert(`Status diubah menjadi: ${next}`);
     } catch(e) {
         alert("Gagal mengubah status.");
-    }
-}
-
-async function hapus(id) {
-    if (!confirm("Hapus data reservasi ini?")) return;
-    try {
-        await deleteRow(id);
-        await loadData();
-        alert("Data berhasil dihapus.");
-    } catch(e) {
-        alert("Gagal menghapus data.");
     }
 }
 
@@ -483,7 +321,7 @@ function refreshData() {
 
 function showPage(page) {
     document.getElementById('pageReservasi').style.display = page === 'reservasi' ? 'block' : 'none';
-    document.getElementById('pageStatistik').style.display = page === 'statistik' ? 'block' : 'none';
+    // Tambahkan halaman statistik jika diperlukan
 }
 
 // ==================== INIT ====================
@@ -492,7 +330,7 @@ document.getElementById('subDate').textContent = new Date().toLocaleDateString('
 });
 
 loadData();
-setInterval(loadData, 30000); // Auto refresh setiap 30 detik
+setInterval(loadData, 30000); // Auto refresh
 </script>
 </body>
 </html>
