@@ -201,20 +201,12 @@ async function fetchAll() {
     return res.json();
 }
 
-async function updateReservasi(id, data) {
-    await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify(data)
-    });
-}
-
 async function deleteRow(id) {
     const res = await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, {
         method: 'DELETE',
         headers
     });
-    if (!res.ok) throw new Error("Gagal menghapus");
+    if (!res.ok) throw new Error("Gagal menghapus data");
 }
 
 // ==================== RENDER TABLE ====================
@@ -241,21 +233,23 @@ function renderTable() {
             <td style="font-weight:600; color:var(--green);">${formatRp(r.total)}</td>
             <td><span class="status-badge s-${r.status.toLowerCase()}" onclick="ubahStatus(${r.id})">${r.status}</span></td>
             <td>
-                <button onclick="editReservasi(${r.id})" title="Edit" style="margin-right:8px; color:var(--gold); font-size:1.1rem;">✏️</button>
-                <button onclick="hapus(${r.id})" title="Hapus" style="color:var(--red); font-size:1.2rem;">🗑</button>
+                <button onclick="editReservasi(${r.id})" title="Edit" style="margin-right:8px; color:var(--gold);">✏️</button>
+                <button onclick="hapus(${r.id})" title="Hapus" style="color:var(--red);">🗑</button>
             </td>
         </tr>
     `).join('');
 }
 
-// ==================== HAPUS FUNCTION (Diperbaiki) ====================
+// ==================== HAPUS (Diperbaiki) ====================
 async function hapus(id) {
-    if (!confirm("Yakin ingin menghapus reservasi ini?")) return;
+    if (!confirm("Yakin ingin menghapus reservasi ini?\nTindakan ini tidak bisa dibatalkan.")) {
+        return;
+    }
 
     try {
         await deleteRow(id);
-        alert("✅ Data berhasil dihapus.");
-        await loadData();        // Refresh tabel
+        alert("✅ Data reservasi berhasil dihapus.");
+        await loadData();   // Refresh tabel
     } catch(e) {
         console.error(e);
         alert("❌ Gagal menghapus data. Silakan coba lagi.");
@@ -269,7 +263,7 @@ async function loadData() {
         renderTable();
     } catch(e) {
         console.error(e);
-        alert("Gagal terhubung ke database.");
+        alert("Gagal terhubung ke database. Periksa koneksi Supabase.");
     }
 }
 
@@ -281,7 +275,11 @@ async function ubahStatus(id) {
     let next = statuses[(statuses.indexOf(row.status) + 1) % statuses.length];
 
     try {
-        await updateReservasi(id, { status: next });
+        await fetch(`${SB_URL}/rest/v1/reservasi?id=eq.${id}`, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify({ status: next })
+        });
         await loadData();
         alert(`Status diubah menjadi: ${next}`);
     } catch(e) {
@@ -321,7 +319,6 @@ function refreshData() {
 
 function showPage(page) {
     document.getElementById('pageReservasi').style.display = page === 'reservasi' ? 'block' : 'none';
-    // Tambahkan halaman statistik jika diperlukan
 }
 
 // ==================== INIT ====================
@@ -330,7 +327,7 @@ document.getElementById('subDate').textContent = new Date().toLocaleDateString('
 });
 
 loadData();
-setInterval(loadData, 30000); // Auto refresh
+setInterval(loadData, 30000);
 </script>
 </body>
 </html>
