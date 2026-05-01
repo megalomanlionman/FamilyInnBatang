@@ -306,31 +306,28 @@ function submitBooking() {
     });
 
     const waText = `Halo Family Inn,\n\n` +
-        `Nama: *${nama}\n*` +
-        `*WA:* ${wa}\n` +
-        `*Kamar:* Standard Room\n` +
-        `*Paket:* ${currentPaket}\n` +
-        `*Check-in:* ${checkinFormatted}\n` +
-        `*Check-out:* ${checkoutFormatted}\n` +
-        `${currentPaket === "Harian" ? `*Jumlah Malam:* ${malam} malam\n` : ''}` +
-        `*Total:* Rp ${total.toLocaleString('id-ID')}\n\n` +
+        `Nama: ${nama}\n` +
+        `WA: ${wa}\n` +
+        `Kamar: Standard Room\n` +
+        `Paket: ${currentPaket}\n` +
+        `Check-in: ${checkinFormatted}\n` +
+        `Check-out: ${checkoutFormatted}\n` +
+        `${currentPaket === "Harian" ? `Jumlah Malam: ${malam} malam\n` : ''}` +
+        `Total: Rp ${total.toLocaleString('id-ID')}\n\n` +
         `Mohon konfirmasi ketersediaan dan status reservasi. Terima kasih! 🙏`;
 
     const whatsappURL = `https://wa.me/6282133851456?text=${encodeURIComponent(waText)}`;
 
-    alert("Sedang membuka WhatsApp...");
+    // Metode 1
+    window.open(whatsappURL, '_blank');
 
-    // Teknik paling agresif untuk iPhone
+    // Metode 2 (untuk iOS)
     setTimeout(() => {
         window.location.href = whatsappURL;
-    }, 300);
-
-    setTimeout(() => {
-        window.open(whatsappURL, '_blank');
-    }, 1200);
+    }, 100);
 
     // Simpan ke database di background
-    setTimeout(async () => {
+    setTimeout(() => {
         const payload = {
             nama: nama,
             wa: wa,
@@ -343,20 +340,16 @@ function submitBooking() {
             catatan: "Booking dari website"
         };
 
-        try {
-            await fetch(`${SB_URL}/rest/v1/reservasi`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SB_KEY,
-                    'Authorization': `Bearer ${SB_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-        } catch (e) {
-            console.error("Gagal simpan database:", e);
-        }
-    }, 800);
+        fetch(`${SB_URL}/rest/v1/reservasi`, {
+            method: 'POST',
+            headers: {
+                'apikey': SB_KEY,
+                'Authorization': `Bearer ${SB_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        }).catch(err => console.error("Gagal simpan database:", err));
+    }, 500);
 
     closeModal();
 }
